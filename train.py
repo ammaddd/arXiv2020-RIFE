@@ -1,3 +1,5 @@
+from comet_ml import Experiment
+experiment = Experiment()
 import os
 import cv2
 import math
@@ -65,6 +67,16 @@ def train(model, local_rank):
             pred, merged_img, flow, loss_l1, loss_flow, loss_cons, loss_ter, flow_mask = model.update(imgs, gt, learning_rate, mul, True, flow_gt)
             train_time_interval = time.time() - time_stamp
             time_stamp = time.time()
+            experiment.log_metric("learning_rate", learning_rate,
+                                  step=step, epoch=epoch)
+            experiment.log_metric("train_loss_l1", loss_l1,
+                                  step=step, epoch=epoch)
+            experiment.log_metric("train_loss_flow", loss_flow,
+                                  step=step, epoch=epoch)
+            experiment.log_metric("train_loss_cons", loss_cons,
+                                  step=step, epoch=epoch)
+            experiment.log_metric("train_loss_ter", loss_ter,
+                                  step=step, epoch=epoch)
             if step % 100 == 1 and local_rank == 0:
                 writer.add_scalar('learning_rate', learning_rate, step)
                 writer.add_scalar('loss_l1', loss_l1, step)
@@ -84,6 +96,14 @@ def train(model, local_rank):
                     writer.add_image(str(i) + '/flow', flow2rgb(flow[i]), step, dataformats='HWC')
                     writer.add_image(str(i) + '/flow_gt', flow2rgb(flow_gt[i]), step, dataformats='HWC')
                     writer.add_image(str(i) + '/flow_mask', flow2rgb(flow[i] * flow_mask[i]), step, dataformats='HWC')
+                    experiment.log_image(imgs, name=str(i) + '/img',
+                                        step=step)
+                    experiment.log_image(flow2rgb(flow[i]), name=str(i)
+                                         + '/flow', step=step)
+                    experiment.log_image(flow2rgb(flow_gt[i]), name=str(i)
+                                         + '/flow_gt', step=step)
+                    experiment.log_image(flow2rgb(flow[i] * flow_mask[i]),
+                                        name=str(i) + '/flow_mask', step=step)
                 writer.flush()
             if local_rank == 0:
                 print('epoch:{} {}/{} time:{:.2f}+{:.2f} loss_l1:{:.4e}'.format(epoch, i, args.step_per_epoch, data_time_interval, train_time_interval, loss_l1))
@@ -91,7 +111,11 @@ def train(model, local_rank):
         nr_eval += 1
         if nr_eval % 5 == 0:
             evaluate(model, val_data, step, local_rank, writer_val)
-        model.save_model(log_path, local_rank)    
+        model.save_model(log_path, local_rank)
+        if epoch % 10 == 0:
+            experiment.log_model("flownet", '{}/flownet.pkl'.format(log_path))
+            experiment.log_model("contextnet", '{}/contextnet.pkl'.format(log_path))
+            experiment.log_model("unet", '{}/unet.pkl'.format(log_path))
         dist.barrier()
 
 def evaluate(model, val_data, nr_eval, local_rank, writer_val):
@@ -151,6 +175,9 @@ if __name__ == "__main__":
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.benchmark = True
+    experiment.log_others(vars(args))
+    experiment.log_code('model/RIFE.py')
+    experiment.log_code('./dataset.py')
     model = Model(args.local_rank)
     train(model, args.local_rank)
         
