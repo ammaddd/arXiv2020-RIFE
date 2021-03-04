@@ -143,7 +143,7 @@ To quickly see the code in action, create a <a href="https://www.comet.ml/">Come
 COMET_API_KEY=YOUR-API-KEY python3 -m torch.distributed.launch --nproc_per_node=4 train.py --world_size=4
 ```
 Demo Project: https://www.comet.ml/comet-papers/rife/ <br /><br />
-<p align="center"><img src="https://user-images.githubusercontent.com/49341767/109951904-11f9fd00-7d00-11eb-9ac1-e5ea604e6b02.png" height="400px" /><br />
+<p align="center"><img src="https://user-images.githubusercontent.com/49341767/109951904-11f9fd00-7d00-11eb-9ac1-e5ea604e6b02.png" /><br />
 Training data logged in comet.</p>
 
 We use 16 CPUs, 4 GPUs and 20G memory for training: 
