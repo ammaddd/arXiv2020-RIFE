@@ -138,6 +138,14 @@ For origin images, you can download them from [Vimeo90K dataset](http://toflow.c
 
 For generating optical flow labels, our paper use [pytorch-liteflownet](https://github.com/sniklaus/pytorch-liteflownet). We also recommend [RAFT](https://github.com/princeton-vl/RAFT) because it's easier to configure. We recommend generating optical flow labels on 2X size images for better labels. You can also generate labels during training, or finetune the optical flow network on the training set. The final impact of the above operations on Vimeo90K PSNR is expected to be within 0.3.
 
+To quickly see the code in action, create a <a href="https://www.comet.ml/">Comet API key</a>, and run the following:
+```
+COMET_API_KEY=YOUR-API-KEY python3 -m torch.distributed.launch --nproc_per_node=4 train.py --world_size=4
+```
+Demo Project: https://www.comet.ml/comet-papers/rife/ <br /><br />
+<p align="center"><img src="https://user-images.githubusercontent.com/49341767/109951904-11f9fd00-7d00-11eb-9ac1-e5ea604e6b02.png" height="400px" /><br />
+Training data logged in comet.</p>
+
 We use 16 CPUs, 4 GPUs and 20G memory for training: 
 ```
 python3 -m torch.distributed.launch --nproc_per_node=4 train.py --world_size=4
